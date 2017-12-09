@@ -1,0 +1,41 @@
+input-language Rust
+decl-version 2.0
+var-comparability implicit
+
+..square(int,\_bool):::ENTER
+x
+5
+1
+y
+1
+1
+
+..square(int,\_bool):::EXIT0
+x
+5
+1
+y
+1
+1
+return
+25
+1
+
+..square(int,\_bool):::ENTER
+x
+25
+1
+y
+0
+1
+
+..square(int,\_bool):::EXIT0
+x
+25
+1
+y
+0
+1
+return
+625
+1
