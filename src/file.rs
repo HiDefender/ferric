@@ -40,12 +40,30 @@ pub fn ferric_clean() -> io::Result<()> {
 }
 
 pub fn read_cur_src() -> Result<Vec<String>, io::Error> {
-    let src_path_buf = env::current_dir()?.push("src");
-    let src_path = src_path_buf.as_path();
-    println!("{:?}", src_path.path());
+    let mut src_path_buf = env::current_dir()?;
+    src_path_buf.push("src");
+    if src_path_buf.is_dir() {
 
-    let files = Vec<String>::new();
+    }
+    println!("{:?}", src_path_buf);
+
+    let files = Vec::new();
     Ok(files)
+}
+
+fn visit_dirs(dir: &Path, files: &mut Vec<String>) -> io::Result<()> {
+    if dir.is_dir() {
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                visit_dirs(&path, &mut files)?;
+            } else {
+                //open_and_read_file if it is .rs
+            }
+        }
+    }
+    Ok(())
 }
 
 fn open_and_read_file(path: &String) -> String {
