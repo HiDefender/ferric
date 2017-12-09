@@ -1,0 +1,4 @@
+/ferric/
+/target/
+**/*.rs.bk
+Cargo.lock
