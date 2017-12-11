@@ -5,7 +5,7 @@ use std::process::Command;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write, BufWriter, BufReader};
 use std::ffi::{OsStr, OsString};
 use std::collections::HashMap;
 
@@ -59,8 +59,8 @@ fn visit_dirs(dir: &Path, files: &mut HashMap<PathBuf, String>) -> io::Result<()
             if path.is_dir() {
                 visit_dirs(&path, files)?;
             } else if path.as_path().extension().unwrap_or(OsStr::new("fail")) == "rs" { //if file is .rs
-            
-                let mut file = open_and_read_file(&path.as_path());
+
+                let file = open_and_read_file(&path.as_path());
                 let folder_path = env::current_dir()?;
                 let mut path = path.clone();
                 let mut top_of_path: Vec<OsString> = Vec::new();
@@ -81,7 +81,7 @@ fn visit_dirs(dir: &Path, files: &mut HashMap<PathBuf, String>) -> io::Result<()
 
 fn open_and_read_file(path: &Path) -> String {
 	// Open the file
-	let mut file = match File::open(&path) {
+	let file = match File::open(&path) {
 		// The 'description' method of 'io::Error' returns a string that
 		// describes the error.
 		Err(why) => {
@@ -89,25 +89,37 @@ fn open_and_read_file(path: &Path) -> String {
 		}
 		Ok(file) => file,
 	};
+    let mut file = BufReader::new(file);
     let mut buf = String::new();
     file.read_to_string(&mut buf);
     buf
 }
 
+pub fn create_and_write_files(files: &HashMap<PathBuf, String>) -> io::Result<()> {
+    //Taken from https://stackoverflow.com/questions/31192956/whats-the-de-facto-way-of-reading-and-writing-files-in-rust-1-x
+    for (path, file) in files {
+        let f = File::create(path).expect("Unable to create file");
+        let mut f = BufWriter::new(f);
+        f.write_all(file.as_bytes()).expect("Unable to write data");
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
 	use super::open_and_read_file;
+    use std::path::PathBuf;
 
 	#[test]
 	fn open_and_read_file_pass() {
-		let s = open_and_read_file(&String::from("test/file/open_and_read_file.txt"));
+		let s = open_and_read_file(&PathBuf::from("test/file/open_and_read_file.txt"));
         assert_eq!("Hello World!\n", s.as_str());
 	}
 
 	#[test]
 	#[should_panic]
 	fn open_and_read_file_panic() {
-		open_and_read_file(&String::from("fail"));
+		open_and_read_file(&PathBuf::from("fail"));
 	}
 
 }
