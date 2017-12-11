@@ -6,7 +6,7 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::Read;
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::collections::HashMap;
 
 pub fn check_or_create_ferric_folder() -> Result<bool, io::Error> {
@@ -48,8 +48,6 @@ pub fn read_cur_src() -> Result<HashMap<PathBuf, String>, io::Error> {
     if src_path_buf.is_dir() {
         visit_dirs(&src_path_buf, &mut files);
     }
-    println!("{:?}", src_path_buf);
-
     Ok(files)
 }
 
@@ -61,10 +59,19 @@ fn visit_dirs(dir: &Path, files: &mut HashMap<PathBuf, String>) -> io::Result<()
             if path.is_dir() {
                 visit_dirs(&path, files)?;
             } else if path.as_path().extension().unwrap_or(OsStr::new("fail")) == "rs" { //if file is .rs
-                //open_and_read_file if it is .rs
+            
                 let mut file = open_and_read_file(&path.as_path());
-                // let boxed_path: Box<Path> = Box::new(*path.as_path());
-                //files.push((, file));
+                let folder_path = env::current_dir()?;
+                let mut path = path.clone();
+                let mut top_of_path: Vec<OsString> = Vec::new();
+                while path != folder_path {
+                    top_of_path.push(path.file_name().unwrap().to_os_string());
+                    path.pop();
+                }
+                path.push("ferric");
+                for x in top_of_path.iter().rev() {
+                    path.push(x);
+                }
                 files.insert(path, file);
             }
         }
