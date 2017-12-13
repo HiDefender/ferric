@@ -75,6 +75,7 @@ impl RepType {
 //  boolean, java.lang.String, etc.), but names for user-defined or
 //  language-specific types can be arbitrary strings. A dec-type entry
 //  is required in each variable block.
+#[derive(PartialEq, Eq, Hash)]
 pub enum DecType {
     Boolean,
     Char,   //Unstable! Rust uses a 4 byte unicode scalar value

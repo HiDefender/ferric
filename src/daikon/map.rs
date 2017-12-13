@@ -25,3 +25,17 @@ pub fn map_src_to_dectype() -> FnvHashMap<&'static str, DecType> {
     map.insert("OsStr", DecType::JavaLangString);
     map
 }
+
+pub fn map_dectype_to_reptype() -> FnvHashMap<DecType, RepType> {
+    let mut map = FnvHashMap::with_capacity_and_hasher(9, Default::default());
+    map.insert(DecType::Boolean, RepType::Boolean);
+    map.insert(DecType::Char, RepType::JavaLangString);
+    map.insert(DecType::Byte, RepType::Int);
+    map.insert(DecType::Short, RepType::Int);
+    map.insert(DecType::Int, RepType::Int);
+    map.insert(DecType::Long, RepType::Int);
+    map.insert(DecType::Float, RepType::Double);
+    map.insert(DecType::Double, RepType::Double);
+    map.insert(DecType::JavaLangString, RepType::JavaLangString);
+    map
+}
