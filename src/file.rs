@@ -46,7 +46,7 @@ pub fn read_cur_src() -> Result<HashMap<PathBuf, String>, io::Error> {
     src_path_buf.push("src");
     let mut files = HashMap::new();
     if src_path_buf.is_dir() {
-        visit_dirs(&src_path_buf, &mut files);
+        visit_dirs(&src_path_buf, &mut files).expect("Error while reading source code.");
     }
     Ok(files)
 }
@@ -91,7 +91,7 @@ fn open_and_read_file(path: &Path) -> String {
 	};
     let mut file = BufReader::new(file);
     let mut buf = String::new();
-    file.read_to_string(&mut buf);
+    file.read_to_string(&mut buf).expect("Error while reading source code.");
     buf
 }
 

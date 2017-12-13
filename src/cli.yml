@@ -11,7 +11,3 @@ subcommands:
         #         help: print debug information
     - clean:
         about: removes the ferric folder
-        # args:
-        #     - debug:
-        #         short: d
-        #         help: print debug information
