@@ -1,21 +1,3 @@
-use std::collections::HashMap;
-use std::path::PathBuf;
-
-// Need to instrument source code.
-// Need to create a .decls file.
-
-pub fn instrument_files(files: HashMap<PathBuf, String>) {
-}
-
-struct Instrumentor {
-    compare_cntr: usize,
-}
-
-struct PPT {
-    fn_name: String, //"..square(int,\_bool):::"
-
-}
-
 //  ***Cannot be changed, must match daikon spec
 //  For .decls files
 //  var-kind <kind> [<relative-name>]
@@ -26,7 +8,7 @@ struct PPT {
 //  theArray. Pointers to arrays are of type field. The arrays
 //  themselves (a sequence of values) are of type array. A var-kind
 //  entry is required in each variable block.
-enum VarKind {
+pub enum VarKind {
     Array,
     Field,
     Function,
@@ -65,7 +47,7 @@ impl VarKind {
 //  values are considered uninteresting for the purposes of output. For
 //  example, Daikon will print ‘var has only one value’ instead of
 //  ‘var == 0x38E8A’.
-enum RepType {
+pub enum RepType {
     Boolean,
     Double,
     Hashcode,
@@ -87,7 +69,13 @@ impl RepType {
 //  ***Note that these are the currently supported types. This
 //      can be expanded. All primitives are Java types.
 
-enum DecType {
+//  dec-type <language-declaration>
+//  This is what the programmer used in the declaration of the variable.
+//  Names for standard types should use Java’s names (e.g., int,
+//  boolean, java.lang.String, etc.), but names for user-defined or
+//  language-specific types can be arbitrary strings. A dec-type entry
+//  is required in each variable block.
+pub enum DecType {
     Boolean,
     Char,   //Unstable! Rust uses a 4 byte unicode scalar value
             //  however, Java uses 2 byte unicode characters.
@@ -108,26 +96,15 @@ enum DecType {
 impl DecType {
     pub fn as_str(&self) -> &str {
         match self {
-            &RepType::Boolean => "boolean",
-            &RepType::Double => "double",
-            &RepType::Hashcode => "hashcode",
-            &RepType::Int => "int",
-            &RepType::JavaLangString => "java.lang.String",
+            &DecType::Boolean => "boolean",
+            &DecType::Char => "char",
+            &DecType::Byte => "byte",
+            &DecType::Short => "short",
+            &DecType::Int => "int",
+            &DecType::Long => "long",
+            &DecType::Float => "float",
+            &DecType::Double => "double",
+            &DecType::JavaLangString => "java.lang.String",
         }
-    }
-}
-
-//This impl has multiple String gen ("generating") functions.
-//Note: It is assumed that all String printing statements are called
-//      via println not print.
-impl PPT {
-    fn gen_header() -> String {
-        String::from("input-language Rust\ndecl-version 2.0\nvar-comparability implicit\n")
-    }
-    fn gen_enter(&self) -> String {
-        unimplemented!();
-    }
-    fn gen_exit(&self, num: usize) {
-        unimplemented!();
     }
 }

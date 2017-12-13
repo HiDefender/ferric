@@ -1,7 +1,10 @@
-mod file;
-mod daikon;
+extern crate fnv;
 #[macro_use]
 extern crate clap;
+
+mod file;
+mod daikon;
+
 use clap::App;
 
 fn main() {
