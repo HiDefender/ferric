@@ -98,6 +98,11 @@ fn open_and_read_file(path: &Path) -> String {
 pub fn create_and_write_files(files: &HashMap<PathBuf, String>) -> io::Result<()> {
     //Taken from https://stackoverflow.com/questions/31192956/whats-the-de-facto-way-of-reading-and-writing-files-in-rust-1-x
     for (path, file) in files {
+        let mut folder_path = path.clone();
+        folder_path.pop();
+        if !folder_path.is_dir() {
+            fs::create_dir_all(folder_path)?;
+        }
         let f = File::create(path).expect("Unable to create file");
         let mut f = BufWriter::new(f);
         f.write_all(file.as_bytes()).expect("Unable to write data");
