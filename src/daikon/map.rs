@@ -3,7 +3,7 @@ use daikon::types::{DecType, RepType};
 use fnv::FnvHashMap;
 
 pub fn map_src_to_dectype() -> FnvHashMap<&'static str, DecType> {
-    let mut map = FnvHashMap::with_capacity_and_hasher(19, Default::default());
+    let mut map = FnvHashMap::with_capacity_and_hasher(21, Default::default());
     map.insert("bool", DecType::Boolean);
     map.insert("char", DecType::Char);
     map.insert("i8", DecType::Byte);
@@ -23,6 +23,8 @@ pub fn map_src_to_dectype() -> FnvHashMap<&'static str, DecType> {
     map.insert("str", DecType::JavaLangString);
     map.insert("OsString", DecType::JavaLangString);
     map.insert("OsStr", DecType::JavaLangString);
+    map.insert("PathBuf", DecType::JavaLangString);
+    map.insert("Path", DecType::JavaLangString);
     map
 }
 
