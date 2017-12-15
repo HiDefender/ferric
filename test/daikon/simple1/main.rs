@@ -7,6 +7,5 @@ fn main() {
 }
 
 fn squar(x: i32, y: bool) -> i32 {
-    let return_daikon = x*x;
-    return_daikon
+    x*x;
 }

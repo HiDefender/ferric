@@ -109,3 +109,17 @@ impl DecType {
         }
     }
 }
+
+#[derive(PartialEq, Eq)]
+pub enum PPTType {
+    enter,
+    subexit(usize),
+}
+impl PPTType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            &PPTType::enter => "enter",
+            &PPTType::subexit(_) => "subexit",
+        }
+    }
+}
