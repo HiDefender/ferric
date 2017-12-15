@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-use std::path::PathBuf;
 use fnv::FnvHashMap;
 use daikon::types::{VarKind, DecType, RepType, PPTType};
 
@@ -60,11 +58,55 @@ impl PPT {
     //==================================
     //  Ignores whitespace, so the first two characters should be "fn",
     //  and the last character '{'
-    pub fn new(mut fn_line: &str) -> PPT {
-        fn_line = fn_line.trim();
-        assert_eq!(Some("fn"), fn_line.get(0..1));
+    pub fn new(fn_line: &str, src_to_dectype: FnvHashMap<&str, DecType>) -> PPT {
+        let fn_line = fn_line.trim();
         let len = fn_line.len();
         assert_eq!(Some("{"), fn_line.get(len..));
+        let mut fn_name = String::from("..");
+        let mut iter = fn_line.split(|c: char| c.is_whitespace() || c == ':' || c == ',' || c == '(' || c == ')')
+            .filter(|&s| !s.is_empty()).enumerate();
+        while let Some((i, word)) = iter.next() {
+            
+            match (i, word) {
+                (0, "fn") => {}
+                (0, a) => panic!(String::from("First word of fn_line is not \"fn\", but: ") + a),
+                (1, a) => {
+                    fn_name.push_str(a);
+                    fn_name.push_str("(");
+                }
+                (_, "->") => {  //Has a return type. Check if it is a support type.
+                    if let Some((_, return_type)) = iter.next() {
+                        if let Some((_, word)) = iter.next() {
+                            if word == "{" { //For the time being we only support simple return types.
+                                             //  This guards against tuples.
+                                
+                                //Check if return_type is in map_src_to_dectype()
+                                if src_to_dectype.contains_key(return_type) {
+                                    // name: String,
+                                    // var_kind: VarKind,
+                                    // rep_type: RepType,
+                                    // dec_type: DecType,
+                                    // is_param: bool, //For simplicities sake "is_param" is the only flag
+                                    //                 //  offered. Ideally all flags would be written as
+                                    //                 //  an enum in types.rs. This variable would then be
+                                    //                 //  replaced by a Vec<Flags>.
+                                    // compare: usize,
+
+                                }
+                            } else {
+                                break;
+                            }
+                        } else {
+                            panic!(String::from("No word after: ") + return_type);
+                        }
+                    } else {
+                        panic!("No word after \"->\"");
+                    }
+                }
+                (_, a) => unimplemented!(),
+            }
+            println!("{}", word);
+        }
         //Create Vec<Variable>
 
         //Form PPT
