@@ -47,6 +47,7 @@ impl VarKind {
 //  values are considered uninteresting for the purposes of output. For
 //  example, Daikon will print ‘var has only one value’ instead of
 //  ‘var == 0x38E8A’.
+#[derive(Clone, Copy)]
 pub enum RepType {
     Boolean,
     Double,
@@ -75,7 +76,7 @@ impl RepType {
 //  boolean, java.lang.String, etc.), but names for user-defined or
 //  language-specific types can be arbitrary strings. A dec-type entry
 //  is required in each variable block.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub enum DecType {
     Boolean,
     Char,   //Unstable! Rust uses a 4 byte unicode scalar value
@@ -112,14 +113,14 @@ impl DecType {
 
 #[derive(PartialEq, Eq)]
 pub enum PPTType {
-    enter,
-    subexit(usize),
+    Enter,
+    Subexit(usize),
 }
 impl PPTType {
     pub fn as_str(&self) -> &str {
         match self {
-            &PPTType::enter => "enter",
-            &PPTType::subexit(_) => "subexit",
+            &PPTType::Enter => "enter",
+            &PPTType::Subexit(_) => "subexit",
         }
     }
 }

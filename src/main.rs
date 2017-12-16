@@ -4,7 +4,6 @@ extern crate clap;
 
 mod file;
 mod daikon;
-mod test;
 
 use clap::App;
 

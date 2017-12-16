@@ -58,15 +58,19 @@ impl PPT {
     //==================================
     //  Ignores whitespace, so the first two characters should be "fn",
     //  and the last character '{'
-    pub fn new(fn_line: &str, src_to_dectype: FnvHashMap<&str, DecType>) -> PPT {
+    pub fn new(fn_line: &str, src_to_dectype: FnvHashMap<&str, DecType>,
+                dectype_to_reptype: FnvHashMap<DecType, RepType>) -> PPT {
         let fn_line = fn_line.trim();
         let len = fn_line.len();
         assert_eq!(Some("{"), fn_line.get(len..));
         let mut fn_name = String::from("..");
         let mut iter = fn_line.split(|c: char| c.is_whitespace() || c == ':' || c == ',' || c == '(' || c == ')')
             .filter(|&s| !s.is_empty()).enumerate();
+        let mut vars: Vec<Variable> = Vec::new();
+        let mut compare: FnvHashMap<&str, usize> = FnvHashMap::default();
+        let mut compare_count = 1;
+        let mut var_count = 0;
         while let Some((i, word)) = iter.next() {
-            
             match (i, word) {
                 (0, "fn") => {}
                 (0, a) => panic!(String::from("First word of fn_line is not \"fn\", but: ") + a),
@@ -80,22 +84,19 @@ impl PPT {
                             if word == "{" { //For the time being we only support simple return types.
                                              //  This guards against tuples.
                                 
-                                //Check if return_type is in map_src_to_dectype()
-                                if src_to_dectype.contains_key(return_type) {
-                                    // name: String,
-                                    // var_kind: VarKind,
-                                    // rep_type: RepType,
-                                    // dec_type: DecType,
-                                    // is_param: bool, //For simplicities sake "is_param" is the only flag
-                                    //                 //  offered. Ideally all flags would be written as
-                                    //                 //  an enum in types.rs. This variable would then be
-                                    //                 //  replaced by a Vec<Flags>.
-                                    // compare: usize,
-
+                                if let Some(dec_type) = src_to_dectype.get(return_type) {
+                                    let rep_type = dectype_to_reptype.get(dec_type).unwrap();
+                                    let compare = *compare.entry(return_type).or_insert_with(||{
+                                                            let without_increment = compare_count;
+                                                            compare_count += 1;
+                                                            without_increment
+                                                        });
+                                    let var = Variable::new("return", return_type, *rep_type, *dec_type,
+                                                            true, compare);
+                                    vars.push(var);
                                 }
-                            } else {
-                                break;
                             }
+                            break;
                         } else {
                             panic!(String::from("No word after: ") + return_type);
                         }
@@ -103,25 +104,48 @@ impl PPT {
                         panic!("No word after \"->\"");
                     }
                 }
-                (_, a) => unimplemented!(),
-            }
-            println!("{}", word);
-        }
-        //Create Vec<Variable>
+                (_, var_name) => {
+                    if var_count > 0 {
+                        fn_name.push_str(",\\_");
+                    }
+                    var_count += 1;
+                    fn_name.push_str(var_name);
+                    if let Some((_, var_type)) = iter.next() {
+                        if let Some(dec_type) = src_to_dectype.get(var_type) {
+                            let rep_type = dectype_to_reptype.get(dec_type).unwrap();
+                            let compare = *compare.entry(var_type).or_insert_with(||{
+                                                    let without_increment = compare_count;
+                                                    compare_count += 1;
+                                                    without_increment
+                                                });
+                            let var = Variable::new(var_name, var_type, *rep_type, *dec_type, true, compare);
+                            vars.push(var);
+                        }
 
-        //Form PPT
-        unimplemented!()
+                    } else {
+                        panic!(String::from("No word after: ") + var_name);
+                    }
+                }
+            }
+        }
+        fn_name.push_str("):::");
+
+        PPT {
+            fn_name: fn_name,
+            vars: vars,
+            exit: 0,
+        }
     }
     pub fn decls_to_string(&self, ppt_type: &PPTType) -> String {
         let mut s = String::from("ppt ") + self.fn_name.as_str();
         s = match ppt_type {
-            &PPTType::enter => s + "ENTER" + "\n\tppt-type enter",
-            &PPTType::subexit(num) => s + "EXIT" + num.to_string().as_str() +
+            &PPTType::Enter => s + "ENTER" + "\n\tppt-type enter",
+            &PPTType::Subexit(num) => s + "EXIT" + num.to_string().as_str() +
             "\n\tppt-type subexit",
         };
         for var in &self.vars {
             match (var.name != "return", ppt_type) {
-                (true, _) | (_, &PPTType::subexit(_)) => s = s + "\n" + var.decls_to_string().as_str(),
+                (true, _) | (_, &PPTType::Subexit(_)) => s = s + "\n" + var.decls_to_string().as_str(),
                 _ => {}
             }
         }
@@ -130,13 +154,13 @@ impl PPT {
     pub fn dtrace_to_string(&self, ppt_type: &PPTType) -> String {
         let mut s = String::from("eprintln!(\"") + self.fn_name.as_str();
         s = match ppt_type {
-            &PPTType::enter => s + "ENTER",
-            &PPTType::subexit(num) => s + "EXIT" + num.to_string().as_str(),
+            &PPTType::Enter => s + "ENTER",
+            &PPTType::Subexit(num) => s + "EXIT" + num.to_string().as_str(),
         };
         let mut tail = String::from("\"");
         for var in &self.vars {
             match (var.name != "return", ppt_type) {
-                (true, _) | (_, &PPTType::subexit(_)) => s = s + "\\n" + var.dtrace_to_string(&mut tail).as_str(),
+                (true, _) | (_, &PPTType::Subexit(_)) => s = s + "\\n" + var.dtrace_to_string(&mut tail).as_str(),
                 _ => {}
             }
         }
@@ -147,6 +171,7 @@ impl PPT {
 struct Variable {
     name: String,
     var_kind: VarKind,
+    rust_type: String,  //The type parsed from the source
     rep_type: RepType,
     dec_type: DecType,
     is_param: bool, //For simplicities sake "is_param" is the only flag
@@ -159,6 +184,18 @@ struct Variable {
 //Note: It is assumed that all String printing statements are called
 //      via println not print.
 impl Variable {
+    pub fn new(name: &str, rust_type: &str, rep_type: RepType, dec_type: DecType,
+                is_param: bool, compare: usize) -> Variable {
+        Variable {
+            name: String::from(name),
+            var_kind: VarKind::Variable,
+            rust_type: String::from(rust_type),
+            rep_type: rep_type,
+            dec_type: dec_type,
+            is_param: is_param,
+            compare: compare,
+        }
+    }
     pub fn dtrace_to_string(&self, tail: &mut String) -> String {
         //If the original source code looks like this:
         //===================================
