@@ -8,7 +8,6 @@ mod map;
 // Need to create a .decls file.
 
 struct Instrumentor {
-    compare_cntr: usize,
     src_to_dectype: FnvHashMap<&'static str, DecType>,
     dectype_to_reptype: FnvHashMap<DecType, RepType>,
     decls: String,
@@ -17,13 +16,19 @@ struct Instrumentor {
 impl Instrumentor {
     pub fn new() -> Instrumentor {
         Instrumentor {
-            compare_cntr: 0,
             src_to_dectype: map::map_src_to_dectype(),
             dectype_to_reptype: map::map_dectype_to_reptype(),
             decls: String::from(Instrumentor::decls_header()),
         }
     }
-    pub fn instrument_file(&mut self, file: &mut String) {
+    pub fn instrument_file(&mut self, file: &String) -> String {
+        
+        //Read through file
+        //Find functions
+        //  if fn not main
+        //      PPT::new()
+        //  else
+        //      insert dtrace_header
         unimplemented!()
     }
     pub fn get_decls(&self) -> String {
@@ -104,6 +109,7 @@ impl PPT {
                         panic!("No word after \"->\"");
                     }
                 }
+                (_, "{") => break,
                 (_, var_name) => {
                     if var_count > 0 {
                         fn_name.push_str(",\\_");
