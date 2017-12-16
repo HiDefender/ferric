@@ -22,7 +22,30 @@ impl Instrumentor {
         }
     }
     pub fn instrument_file(&mut self, file: &String) -> String {
-        
+        //A guess at the upperbound instrumented file length.
+        let mut inst_file = String::with_capacity((file.len() as f32 * 1.1) as usize);
+        let mut char_iter = file.chars().enumerate();
+        let mut match_degree: u8 = 1;
+        let mut fn_capture = false;
+        let mut fn_start = 0;
+        // let mut word_iter;
+        while let Some((i, c)) = char_iter.next() {
+            inst_file.push(c);
+            if c.is_whitespace() {
+                if match_degree == 3 {
+                    fn_capture = true;
+                    fn_start = 
+                }
+                match_degree = 1;
+            } else if match_degree == 1 && c == 'f' {
+                match_degree = 2;
+            }
+            } else if match_degree == 2 && c == 'n' {
+                match_degree = 3;
+            } else {
+                match_degree = 0;
+            }
+        }
         //Read through file
         //Find functions
         //  if fn not main
