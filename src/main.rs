@@ -39,6 +39,7 @@ fn main() {
             let decls_file = instumentor.get_decls();
             instr_files.insert(ferric_folder, decls_file);
             file::create_and_write_files(&instr_files).expect("Unexpected error while writing instrumented code.");
+            file::copy_toml_file().expect("Could not copy Cargo.toml.");
         },
         Some("clean") => file::ferric_clean().expect("ferric clean failed"),
         None        => println!("Please use a subcommand. Try \"ferric help\""),
