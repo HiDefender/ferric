@@ -48,19 +48,24 @@ pub fn get_ferric_decls_path() -> Result<PathBuf, io::Error> {
     Ok(path)
 }
 
-pub fn clean_dtrace_file() -> io::Result<()> {
+pub fn clean_and_write_dtrace_file(file: String) -> io::Result<()> {
+    let mut cleaned_file = String::new();
+    cleaned_file.push_str("input-language Rust\n");
+    cleaned_file.push_str("decl-version 2.0\n");
+    cleaned_file.push_str("var-comparability implicit\n\n");
+    for line in file.lines() {
+        if line.contains("***Daikon@Rust***") {
+            cleaned_file.push_str(&line[17..]);
+            cleaned_file.push_str("\n");
+        }
+    }
     let mut path = env::current_dir()?;
     path.push("ferric");
     path.push("ferric.dtrace");
-    let mut file = open_and_read_file(&path);
-    let last = file.lines().last().unwrap();
-    let mut cleaned_file = String::new();
-    for line in file.lines().skip(2) {
-        if line != last {
-            cleaned_file.push_str(line);
-        }
-    }
 
+    let f = File::create(path).expect("Unable to create file");
+    let mut f = BufWriter::new(f);
+    f.write_all(cleaned_file.as_bytes()).expect("Unable to write data");
     Ok(())
 }
 

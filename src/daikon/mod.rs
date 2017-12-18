@@ -54,7 +54,7 @@ impl Instrumentor {
         self.decls.clone()
     }
     fn decls_header<'a>() -> &'a str {
-        "input-language Rust\ndecl-version 2.0\nvar-comparability implicit\n"
+        "input-language Rust\ndecl-version 2.0\nvar-comparability implicit\n\n"
     }
     fn dtrace_header<'a>() -> &'a str {
         "eprintln!(\"input-language Rust\ndecl-version 2.0\nvar-comparability implicit\n\");"
@@ -99,6 +99,10 @@ impl PPT {
                     if Some((1, "fn")) != iter.next() {
                         panic!("First word of fn_line is not \"fn\"");
                     }
+                    if let Some((2, a)) = iter.next() {
+                        fn_name.push_str(a);
+                        fn_name.push_str("(");
+                    }
                 }
                 (0, a) => panic!(String::from("First word of fn_line is not \"fn\", but: ") + a),
                 (1, a) => {
@@ -134,7 +138,7 @@ impl PPT {
                 (_, "{") => break,
                 (_, var_name) => {
                     if var_count > 0 {
-                        fn_name.push_str(",\\\\_");
+                        fn_name.push_str(",");
                     }
                     var_count += 1;
                     fn_name.push_str(var_name);
@@ -180,15 +184,15 @@ impl PPT {
         s + "\n"
     }
     pub fn dtrace_to_string(&self, ppt_type: &PPTType) -> String {
-        let mut s = String::from("eprintln!(\"") + self.fn_name.as_str();
+        let mut s = String::from("eprintln!(\"***Daikon@Rust***") + self.fn_name.as_str();
         s = match ppt_type {
             &PPTType::Enter => s + "ENTER",
             &PPTType::Subexit(num) => s + "EXIT" + num.to_string().as_str(),
         };
-        let mut tail = String::from("\"");
+        let mut tail = String::from("\\n***Daikon@Rust***\"");
         for var in &self.vars {
             match (var.name != "return", ppt_type) {
-                (true, _) | (_, &PPTType::Subexit(_)) => s = s + "\\n" + var.dtrace_to_string(&mut tail).as_str(),
+                (true, _) | (_, &PPTType::Subexit(_)) => s = s + "\\n***Daikon@Rust***" + var.dtrace_to_string(&mut tail).as_str(),
                 _ => {}
             }
         }
