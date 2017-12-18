@@ -8,6 +8,7 @@ mod daikon;
 use clap::App;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 fn main() {
     let matches = clap_app!(myapp =>
@@ -35,11 +36,19 @@ fn main() {
                 let file = instumentor.instrument_file(file);
                 instr_files.insert(pathbuf.clone(), file);
             }
-            let ferric_folder = file::get_ferric_decls_path().expect("Could not get ferric folder address.");
+            let mut ferric_folder = file::get_ferric_decls_path().expect("Could not get ferric folder address.");
             let decls_file = instumentor.get_decls();
             instr_files.insert(ferric_folder, decls_file);
             file::create_and_write_files(&instr_files).expect("Unexpected error while writing instrumented code.");
             file::copy_toml_file().expect("Could not copy Cargo.toml.");
+            let mut ferric_folder = file::get_ferric_decls_path().expect("Could not get ferric folder address.");
+            ferric_folder.pop();
+            Command::new("cargo")
+                .args(&["test", "--", "--test-threads=1", "--nocapture", "2>", "ferric.dtrace"])
+                .current_dir(ferric_folder)
+                .output()
+                .expect("\"cargo new ferric\" failed.");
+            file::clean_dtrace_file().expect("Could not clean trace file.");
         },
         Some("clean") => file::ferric_clean().expect("ferric clean failed"),
         None        => println!("Please use a subcommand. Try \"ferric help\""),

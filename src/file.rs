@@ -48,6 +48,22 @@ pub fn get_ferric_decls_path() -> Result<PathBuf, io::Error> {
     Ok(path)
 }
 
+pub fn clean_dtrace_file() -> io::Result<()> {
+    let mut path = env::current_dir()?;
+    path.push("ferric");
+    path.push("ferric.dtrace");
+    let mut file = open_and_read_file(&path);
+    let last = file.lines().last().unwrap();
+    let mut cleaned_file = String::new();
+    for line in file.lines().skip(2) {
+        if line != last {
+            cleaned_file.push_str(line);
+        }
+    }
+
+    Ok(())
+}
+
 pub fn copy_toml_file() -> io::Result<()> {
     let mut toml_path = env::current_dir()?;
     let mut new_toml_path = toml_path.clone();
