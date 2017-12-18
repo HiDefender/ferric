@@ -24,49 +24,31 @@ impl Instrumentor {
     pub fn instrument_file(&mut self, file: &String) -> String {
         //A guess at the upperbound instrumented file length.
         let mut inst_file = String::with_capacity((file.len() as f32 * 1.1) as usize);
-        for line in file.lines() {
-            match (line.split_whitespace().nth(0), line.split_whitespace().last()) {
-                (Some("fn"), Some("{")) => {
+        let mut iter = file.lines();
+        while let Some(line) = iter.next() {
+            inst_file.push_str(line);
+            inst_file.push_str("\n");
+            match (line.split_whitespace().nth(0), line.split_whitespace().nth(1), line.split_whitespace().last()) {
+                (Some("fn"), _, Some("{")) | (Some("pub"), Some("fn"), Some("{")) => {
                     if !line.contains("main") {
                         let ppt = PPT::new(line, &self.src_to_dectype, &self.dectype_to_reptype);
-                        println!("{}\n", ppt.decls_to_string(&PPTType::Enter));
-                        println!("*******************************************");
-                        println!("{}\n", ppt.dtrace_to_string(&PPTType::Enter));
+                        inst_file.push_str(ppt.dtrace_to_string(&PPTType::Enter).as_str());
+                        inst_file.push_str("\n");
+                        self.decls.push_str(ppt.decls_to_string(&PPTType::Enter).as_str());
+                        self.decls.push_str("\n");
                     }
                 }
-                _ => {}
+                _ => {
+                    if line.contains("return") {
+                        
+                    } else {
+
+                    }
+                }
             }
 
         }
-        // let mut char_iter = file.chars().enumerate();
-        // let mut match_degree: u8 = 1;
-        // let mut fn_capture = false;
-        // let mut fn_start = 0;
-        // // let mut word_iter;
-        // while let Some((i, c)) = char_iter.next() {
-        //     inst_file.push(c);
-        //     if c.is_whitespace() {
-        //         if match_degree == 3 {
-        //             fn_capture = true;
-        //             fn_start = 
-        //         }
-        //         match_degree = 1;
-        //     } else if match_degree == 1 && c == 'f' {
-        //         match_degree = 2;
-        //     }
-        //     } else if match_degree == 2 && c == 'n' {
-        //         match_degree = 3;
-        //     } else {
-        //         match_degree = 0;
-        //     }
-        // }
-        //Read through file
-        //Find functions
-        //  if fn not main
-        //      PPT::new()
-        //  else
-        //      insert dtrace_header
-        String::new()
+        inst_file
     }
     pub fn get_decls(&self) -> String {
         unimplemented!()
@@ -103,8 +85,6 @@ impl PPT {
     pub fn new(fn_line: &str, src_to_dectype: &FnvHashMap<&str, DecType>,
                 dectype_to_reptype: &FnvHashMap<DecType, RepType>) -> PPT {
         let fn_line = fn_line.trim();
-        let len = fn_line.len();
-        assert_eq!(Some("{"), fn_line.get(len..));
         let mut fn_name = String::from("..");
         let mut iter = fn_line.split(|c: char| c.is_whitespace() || c == ':' || c == ',' || c == '(' || c == ')')
             .filter(|&s| !s.is_empty()).enumerate();
@@ -115,6 +95,11 @@ impl PPT {
         while let Some((i, word)) = iter.next() {
             match (i, word) {
                 (0, "fn") => {}
+                (0, "pub") => {
+                    if Some((1, "fn")) != iter.next() {
+                        panic!("First word of fn_line is not \"fn\"");
+                    }
+                }
                 (0, a) => panic!(String::from("First word of fn_line is not \"fn\", but: ") + a),
                 (1, a) => {
                     fn_name.push_str(a);

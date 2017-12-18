@@ -5,4 +5,4 @@ authors = ["jared"]
 
 [dependencies]
 fnv = "1.0.3"
-clap = {version = "2.29", features = ["yaml"]}
+clap = "2.29"
