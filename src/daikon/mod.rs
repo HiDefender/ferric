@@ -51,7 +51,7 @@ impl Instrumentor {
         inst_file
     }
     pub fn get_decls(&self) -> String {
-        unimplemented!()
+        self.decls.clone()
     }
     fn decls_header<'a>() -> &'a str {
         "input-language Rust\ndecl-version 2.0\nvar-comparability implicit\n"
@@ -134,7 +134,7 @@ impl PPT {
                 (_, "{") => break,
                 (_, var_name) => {
                     if var_count > 0 {
-                        fn_name.push_str(",\\_");
+                        fn_name.push_str(",\\\\_");
                     }
                     var_count += 1;
                     fn_name.push_str(var_name);

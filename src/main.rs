@@ -35,6 +35,9 @@ fn main() {
                 let file = instumentor.instrument_file(file);
                 instr_files.insert(pathbuf.clone(), file);
             }
+            let ferric_folder = file::get_ferric_decls_path().expect("Could not get ferric folder address.");
+            let decls_file = instumentor.get_decls();
+            instr_files.insert(ferric_folder, decls_file);
             file::create_and_write_files(&instr_files).expect("Unexpected error while writing instrumented code.");
         },
         Some("clean") => file::ferric_clean().expect("ferric clean failed"),

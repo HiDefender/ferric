@@ -41,6 +41,23 @@ pub fn ferric_clean() -> io::Result<()> {
     Ok(())
 }
 
+pub fn get_ferric_decls_path() -> Result<PathBuf, io::Error> {
+    let mut path = env::current_dir()?;
+    path.push("ferric");
+    path.push("ferric.decls");
+    Ok(path)
+}
+
+pub fn copy_toml_file() -> io::Result<()> {
+    let mut toml_path = env::current_dir()?;
+    let mut new_toml_path = toml_path.clone();
+    toml_path.push("Cargo.toml");
+    new_toml_path.push("ferric");
+    new_toml_path.push("Cargo.toml");
+    fs::copy(toml_path, new_toml_path)?;
+    Ok(())
+}
+
 pub fn read_cur_src() -> Result<HashMap<PathBuf, String>, io::Error> {
     let mut src_path_buf = env::current_dir()?;
     src_path_buf.push("src");
