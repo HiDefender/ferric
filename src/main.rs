@@ -15,8 +15,11 @@ fn main() {
         Some("daikon") => {
             file::check_or_create_ferric_folder().expect("Unexpected error while creating the ferric folder.");
             let files = file::read_cur_src().unwrap();
-            for pathbuf in files.keys() {
+            let mut instumentor  = daikon::Instrumentor::new();
+            for (pathbuf, file) in &files {
                 println!("{:?}", pathbuf);
+                instumentor.instrument_file(file);
+
             }
             file::create_and_write_files(&files).expect("Unexpected error while writing instrumented code.");
         },

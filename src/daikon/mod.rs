@@ -7,7 +7,7 @@ mod map;
 // Need to instrument source code.
 // Need to create a .decls file.
 
-struct Instrumentor {
+pub struct Instrumentor {
     src_to_dectype: FnvHashMap<&'static str, DecType>,
     dectype_to_reptype: FnvHashMap<DecType, RepType>,
     decls: String,
@@ -24,35 +24,49 @@ impl Instrumentor {
     pub fn instrument_file(&mut self, file: &String) -> String {
         //A guess at the upperbound instrumented file length.
         let mut inst_file = String::with_capacity((file.len() as f32 * 1.1) as usize);
-        let mut char_iter = file.chars().enumerate();
-        let mut match_degree: u8 = 1;
-        let mut fn_capture = false;
-        let mut fn_start = 0;
-        // let mut word_iter;
-        while let Some((i, c)) = char_iter.next() {
-            inst_file.push(c);
-            if c.is_whitespace() {
-                if match_degree == 3 {
-                    fn_capture = true;
-                    fn_start = 
+        for line in file.lines() {
+            match (line.split_whitespace().nth(0), line.split_whitespace().last()) {
+                (Some("fn"), Some("{")) => {
+                    if !line.contains("main") {
+                        let ppt = PPT::new(line, &self.src_to_dectype, &self.dectype_to_reptype);
+                        println!("{}\n", ppt.decls_to_string(&PPTType::Enter));
+                        println!("*******************************************");
+                        println!("{}\n", ppt.dtrace_to_string(&PPTType::Enter));
+                    }
                 }
-                match_degree = 1;
-            } else if match_degree == 1 && c == 'f' {
-                match_degree = 2;
+                _ => {}
             }
-            } else if match_degree == 2 && c == 'n' {
-                match_degree = 3;
-            } else {
-                match_degree = 0;
-            }
+
         }
+        // let mut char_iter = file.chars().enumerate();
+        // let mut match_degree: u8 = 1;
+        // let mut fn_capture = false;
+        // let mut fn_start = 0;
+        // // let mut word_iter;
+        // while let Some((i, c)) = char_iter.next() {
+        //     inst_file.push(c);
+        //     if c.is_whitespace() {
+        //         if match_degree == 3 {
+        //             fn_capture = true;
+        //             fn_start = 
+        //         }
+        //         match_degree = 1;
+        //     } else if match_degree == 1 && c == 'f' {
+        //         match_degree = 2;
+        //     }
+        //     } else if match_degree == 2 && c == 'n' {
+        //         match_degree = 3;
+        //     } else {
+        //         match_degree = 0;
+        //     }
+        // }
         //Read through file
         //Find functions
         //  if fn not main
         //      PPT::new()
         //  else
         //      insert dtrace_header
-        unimplemented!()
+        String::new()
     }
     pub fn get_decls(&self) -> String {
         unimplemented!()
@@ -86,8 +100,8 @@ impl PPT {
     //==================================
     //  Ignores whitespace, so the first two characters should be "fn",
     //  and the last character '{'
-    pub fn new(fn_line: &str, src_to_dectype: FnvHashMap<&str, DecType>,
-                dectype_to_reptype: FnvHashMap<DecType, RepType>) -> PPT {
+    pub fn new(fn_line: &str, src_to_dectype: &FnvHashMap<&str, DecType>,
+                dectype_to_reptype: &FnvHashMap<DecType, RepType>) -> PPT {
         let fn_line = fn_line.trim();
         let len = fn_line.len();
         assert_eq!(Some("{"), fn_line.get(len..));
