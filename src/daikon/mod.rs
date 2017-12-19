@@ -137,6 +137,20 @@ impl PPT {
                 }
                 (_, "{") => break,
                 (_, var_name) => {
+                    let mut var_name = var_name;
+                    if var_name == "&mut" || var_name == "&" {
+                        if let Some((_, var)) = iter.next() {
+                            var_name = var;
+                        }
+                    }
+                    if var_name.contains("<") {
+                        while !var_name.contains(">") {
+                            if let Some((_, var)) = iter.next() {
+                                var_name = var;
+                            }
+                        }
+                        continue;
+                    }
                     if var_count > 0 {
                         fn_name.push_str(",");
                     }
@@ -196,6 +210,7 @@ impl PPT {
                 _ => {}
             }
         }
+        // println!("{}", s.clone() + tail.as_str() + ");");
         s + tail.as_str() + ");"
     }
 }
@@ -246,14 +261,15 @@ impl Variable {
         // }
         //===================================
         tail.push_str(", ");
-        if self.name == "return" {
+        if self.name == "***Daikon@Rust***return" {
             tail.push_str("return_daikon_unique");
         } else {
             tail.push_str(self.name.as_str());
         }
-        let s = self.name.clone();
+        let mut s = String::from("***Daikon@Rust***");
+        s = s + self.name.as_str();
         //Note: The hardcoded '1' could be replaced to change the modified flag.
-        s + "\\n{}\\n1"
+        s + "\\n***Daikon@Rust***{}\\n***Daikon@Rust***1"
     }
     pub fn decls_to_string(&self) -> String {
         let s = String::from("\tvariable ");

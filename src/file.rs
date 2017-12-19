@@ -48,14 +48,18 @@ pub fn get_ferric_decls_path() -> Result<PathBuf, io::Error> {
     Ok(path)
 }
 
-pub fn clean_and_write_dtrace_file(file: String) -> io::Result<()> {
+pub fn clean_and_write_dtrace_file(file: String, debug: bool) -> io::Result<()> {
     let mut cleaned_file = String::new();
     cleaned_file.push_str("input-language Rust\n");
     cleaned_file.push_str("decl-version 2.0\n");
     cleaned_file.push_str("var-comparability implicit\n\n");
     for line in file.lines() {
-        if line.contains("***Daikon@Rust***") {
-            cleaned_file.push_str(&line[17..]);
+        if debug || line.contains("***Daikon@Rust***") {
+            if debug {
+                cleaned_file.push_str(line);
+            } else {
+                cleaned_file.push_str(&line[17..]);
+            }
             cleaned_file.push_str("\n");
         }
     }
